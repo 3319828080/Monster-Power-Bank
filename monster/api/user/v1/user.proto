@@ -1,0 +1,213 @@
+syntax = "proto3";
+
+package user.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "monster/api/user/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.user.v1";
+
+// 用户服务（含登录注册、个人信息、钱包押金管理）
+service User {
+  // 微信小程序登录
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = { post: "/api/v1/user/login" body: "*" };
+  }
+  // 手机号验证码登录
+  rpc LoginPhone(LoginPhoneRequest) returns (LoginResponse) {
+    option (google.api.http) = { post: "/api/v1/user/login-phone" body: "*" };
+  }
+  // 发送短信验证码
+  rpc SendSmsCode(SendSmsCodeRequest) returns (SendSmsCodeResponse) {
+    option (google.api.http) = { post: "/api/v1/user/send-sms-code" body: "*" };
+  }
+  // 绑定手机号
+  rpc BindPhone(BindPhoneRequest) returns (BindPhoneResponse) {
+    option (google.api.http) = { post: "/api/v1/user/bind-phone" body: "*" };
+  }
+  // 获取个人信息
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse) {
+    option (google.api.http) = { get: "/api/v1/user/profile" };
+  }
+  // 更新个人信息
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse) {
+    option (google.api.http) = { put: "/api/v1/user/profile" body: "*" };
+  }
+  // 退出登录
+  rpc Logout(LogoutRequest) returns (LogoutResponse) {
+    option (google.api.http) = { post: "/api/v1/user/logout" body: "*" };
+  }
+  // 查询钱包资产（余额、押金、累计消费）
+  rpc GetWallet(GetWalletRequest) returns (GetWalletResponse) {
+    option (google.api.http) = { get: "/api/v1/wallet" };
+  }
+  // 查询资金流水账单
+  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse) {
+    option (google.api.http) = { get: "/api/v1/wallet/transactions" };
+  }
+  // 缴纳押金
+  rpc PayDeposit(PayDepositRequest) returns (PayDepositResponse) {
+    option (google.api.http) = { post: "/api/v1/wallet/deposit/pay" body: "*" };
+  }
+  // 押金快速充值
+  rpc RechargeDeposit(RechargeDepositRequest) returns (RechargeDepositResponse) {
+    option (google.api.http) = { post: "/api/v1/wallet/deposit/recharge" body: "*" };
+  }
+  // 退还押金
+  rpc RefundDeposit(RefundDepositRequest) returns (RefundDepositResponse) {
+    option (google.api.http) = { post: "/api/v1/wallet/deposit/refund" body: "*" };
+  }
+  // 查询押金规则和缴纳状态
+  rpc GetDepositInfo(GetDepositInfoRequest) returns (GetDepositInfoResponse) {
+    option (google.api.http) = { get: "/api/v1/wallet/deposit-info" };
+  }
+}
+
+message UserInfo {
+  int64 id = 1;          // 用户ID
+  string open_id = 2;    // 微信open_id
+  string union_id = 3;   // 微信union_id
+  string nickname = 4;   // 昵称
+  string avatar = 5;     // 头像URL
+  string phone = 6;      // 手机号
+  int32 gender = 7;      // 性别：0-未知 1-男 2-女
+  int32 status = 8;      // 状态：1-正常 2-冻结
+  string created_at = 9; // 创建时间
+  string updated_at = 10;// 更新时间
+}
+
+message LoginRequest {
+  string code = 1;      // 微信临时登录凭证(code)
+  string nickname = 2;  // 微信昵称（首次登录时使用）
+  string avatar = 3;    // 微信头像URL（首次登录时使用）
+}
+
+message LoginResponse {
+  string token = 1;     // JWT令牌
+  UserInfo user = 2;    // 用户信息
+}
+
+message LoginPhoneRequest {
+  string phone = 1;     // 手机号
+  string code = 2;      // 短信验证码
+  string nickname = 3;  // 昵称（首次登录时使用）
+  string avatar = 4;    // 头像URL（首次登录时使用）
+}
+
+message SendSmsCodeRequest {
+  string phone = 1;     // 手机号
+}
+
+message SendSmsCodeResponse {
+  string message = 1;   // 操作结果消息
+}
+
+message BindPhoneRequest {
+  string phone = 1;     // 手机号
+  string code = 2;      // 短信验证码
+}
+
+message BindPhoneResponse {
+  string message = 1;   // 操作结果消息
+}
+
+message GetProfileRequest {}
+
+message GetProfileResponse {
+  UserInfo user = 1;    // 用户信息
+}
+
+message UpdateProfileRequest {
+  string nickname = 1;  // 昵称
+  string avatar = 2;    // 头像URL
+  int32 gender = 3;     // 性别：0-未知 1-男 2-女
+}
+
+message UpdateProfileResponse {
+  UserInfo user = 1;    // 更新后的用户信息
+}
+
+message LogoutRequest {}
+
+message LogoutResponse {
+  string message = 1;   // 操作结果消息
+}
+
+message WalletInfo {
+  int64 id = 1;                // 钱包ID
+  int64 user_id = 2;           // 用户ID
+  int64 balance = 3;           // 余额（分）
+  int64 frozen = 4;            // 冻结金额（分）
+  int64 total_recharge = 5;    // 累计充值（分）
+  int64 total_consume = 6;     // 累计消费（分）
+  int32 status = 7;            // 状态：1-正常 2-冻结
+  string created_at = 8;       // 创建时间
+  string updated_at = 9;       // 更新时间
+}
+
+message TransactionInfo {
+  int64 id = 1;                // 记录ID
+  int64 user_id = 2;           // 用户ID
+  int64 wallet_id = 3;         // 钱包ID
+  string order_id = 4;         // 关联订单号
+  string trade_type = 5;       // 交易类型
+  int64 amount = 6;            // 交易金额（分）
+  int64 balance_before = 7;    // 交易前余额（分）
+  int64 balance_after = 8;     // 交易后余额（分）
+  string remark = 9;           // 备注
+  string created_at = 10;      // 创建时间
+}
+
+message GetWalletRequest {}
+
+message GetWalletResponse {
+  WalletInfo wallet = 1;        // 钱包信息
+}
+
+message ListTransactionsRequest {
+  int32 page = 1;               // 页码
+  int32 page_size = 2;          // 每页数量
+}
+
+message ListTransactionsResponse {
+  repeated TransactionInfo list = 1;  // 交易记录列表
+  int32 total = 2;                     // 总记录数
+  int32 page = 3;                      // 当前页码
+  int32 page_size = 4;                 // 每页数量
+}
+
+message PayDepositRequest {
+  int64 amount = 1;             // 押金金额（分）
+}
+
+message PayDepositResponse {
+  string message = 1;           // 操作结果消息
+}
+
+message RechargeDepositRequest {
+  int64 amount = 1;             // 充值金额（分）
+}
+
+message RechargeDepositResponse {
+  string message = 1;           // 操作结果消息
+}
+
+message RefundDepositRequest {}
+
+message RefundDepositResponse {
+  string message = 1;           // 操作结果消息
+}
+
+// ---------- 押金规则和状态查询 ----------
+
+message GetDepositInfoRequest {}
+
+message GetDepositInfoResponse {
+  bool has_deposit = 1;         // 是否已缴纳押金
+  int64 deposit_amount = 2;     // 押金标准金额（分）
+  int64 deposit_frozen = 3;     // 当前冻结押金（分）
+  int64 wallet_balance = 4;     // 钱包余额（分）
+  bool deposit_enough = 5;      // 余额是否足够支付押金
+  string rules = 6;             // 押金规则说明
+}

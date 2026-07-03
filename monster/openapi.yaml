@@ -1,0 +1,1225 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: ""
+    version: 0.0.1
+paths:
+    /api/v1/notifications/read:
+        post:
+            tags:
+                - Payment
+            description: 消息已读
+            operationId: Payment_MarkNotificationRead
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/payment.v1.MarkNotificationReadRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/payment.v1.MarkNotificationReadResponse'
+    /api/v1/order/cancel:
+        post:
+            tags:
+                - Order
+            description: 取消订单
+            operationId: Order_CancelOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.CancelOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.CancelOrderResponse'
+    /api/v1/order/compensation:
+        post:
+            tags:
+                - Order
+            description: 待赔付支付入口
+            operationId: Order_CreateCompensationPayment
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.CreateCompensationPaymentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.CreateCompensationPaymentResponse'
+    /api/v1/order/create:
+        post:
+            tags:
+                - Order
+            description: 创建租借订单
+            operationId: Order_CreateOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.CreateOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.CreateOrderResponse'
+    /api/v1/order/current:
+        get:
+            tags:
+                - Order
+            description: 查询当前订单
+            operationId: Order_GetCurrentOrder
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.GetCurrentOrderResponse'
+    /api/v1/order/delay-fee:
+        post:
+            tags:
+                - Order
+            description: 延长租借费用预览
+            operationId: Order_GetDelayFee
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.GetDelayFeeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.GetDelayFeeResponse'
+    /api/v1/order/detail:
+        get:
+            tags:
+                - Order
+            description: 查询订单详情（含借还机柜仓位信息）
+            operationId: Order_GetOrderDetail
+            parameters:
+                - name: orderNo
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.GetOrderDetailResponse'
+    /api/v1/order/extend:
+        post:
+            tags:
+                - Order
+            description: 延长租借
+            operationId: Order_ExtendRental
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.ExtendRentalRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.ExtendRentalResponse'
+    /api/v1/order/fee:
+        get:
+            tags:
+                - Order
+            description: 实时费用查询
+            operationId: Order_GetRealTimeFee
+            parameters:
+                - name: orderNo
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.GetRealTimeFeeResponse'
+    /api/v1/order/list:
+        post:
+            tags:
+                - Order
+            description: 历史订单查询
+            operationId: Order_ListOrders
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.ListOrdersRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.ListOrdersResponse'
+    /api/v1/order/pre-check:
+        post:
+            tags:
+                - Order
+            description: 租借前预检
+            operationId: Order_PreCheckBorrow
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.PreCheckBorrowRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.PreCheckBorrowResponse'
+    /api/v1/order/return:
+        post:
+            tags:
+                - Order
+            description: 归还充电宝
+            operationId: Order_ReturnPowerBank
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.ReturnPowerBankRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.ReturnPowerBankResponse'
+    /api/v1/payment/callback:
+        post:
+            tags:
+                - Payment
+            description: 支付异步回调
+            operationId: Payment_PaymentCallback
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/payment.v1.PaymentCallbackRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/payment.v1.PaymentCallbackResponse'
+    /api/v1/payment/create:
+        post:
+            tags:
+                - Payment
+            description: 统一拉起支付
+            operationId: Payment_CreatePayment
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/payment.v1.CreatePaymentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/payment.v1.CreatePaymentResponse'
+    /api/v1/station/cabinet-list:
+        get:
+            tags:
+                - Order
+            description: 查询站点下所有机柜及仓位详情
+            operationId: Order_GetCabinetList
+            parameters:
+                - name: stationId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.GetCabinetListResponse'
+    /api/v1/station/nearby:
+        post:
+            tags:
+                - Order
+            description: 查询附近站点
+            operationId: Order_ListNearbyStations
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/order.v1.ListNearbyStationsRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.ListNearbyStationsResponse'
+    /api/v1/station/{id}:
+        get:
+            tags:
+                - Order
+            description: 获取站点详情
+            operationId: Order_GetStation
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/order.v1.GetStationResponse'
+    /api/v1/user/bind-phone:
+        post:
+            tags:
+                - User
+            description: 绑定手机号
+            operationId: User_BindPhone
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.BindPhoneRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.BindPhoneResponse'
+    /api/v1/user/login:
+        post:
+            tags:
+                - User
+            description: 微信小程序登录
+            operationId: User_Login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.LoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.LoginResponse'
+    /api/v1/user/login-phone:
+        post:
+            tags:
+                - User
+            description: 手机号验证码登录
+            operationId: User_LoginPhone
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.LoginPhoneRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.LoginResponse'
+    /api/v1/user/logout:
+        post:
+            tags:
+                - User
+            description: 退出登录
+            operationId: User_Logout
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.LogoutRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.LogoutResponse'
+    /api/v1/user/profile:
+        get:
+            tags:
+                - User
+            description: 获取个人信息
+            operationId: User_GetProfile
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.GetProfileResponse'
+        put:
+            tags:
+                - User
+            description: 更新个人信息
+            operationId: User_UpdateProfile
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.UpdateProfileRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.UpdateProfileResponse'
+    /api/v1/user/send-sms-code:
+        post:
+            tags:
+                - User
+            description: 发送短信验证码
+            operationId: User_SendSmsCode
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.SendSmsCodeRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.SendSmsCodeResponse'
+    /api/v1/wallet:
+        get:
+            tags:
+                - User
+            description: 查询钱包资产（余额、押金、累计消费）
+            operationId: User_GetWallet
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.GetWalletResponse'
+    /api/v1/wallet/deposit-info:
+        get:
+            tags:
+                - User
+            description: 查询押金规则和缴纳状态
+            operationId: User_GetDepositInfo
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.GetDepositInfoResponse'
+    /api/v1/wallet/deposit/pay:
+        post:
+            tags:
+                - User
+            description: 缴纳押金
+            operationId: User_PayDeposit
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.PayDepositRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.PayDepositResponse'
+    /api/v1/wallet/deposit/recharge:
+        post:
+            tags:
+                - User
+            description: 押金快速充值
+            operationId: User_RechargeDeposit
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.RechargeDepositRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.RechargeDepositResponse'
+    /api/v1/wallet/deposit/refund:
+        post:
+            tags:
+                - User
+            description: 退还押金
+            operationId: User_RefundDeposit
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.RefundDepositRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.RefundDepositResponse'
+    /api/v1/wallet/transactions:
+        get:
+            tags:
+                - User
+            description: 查询资金流水账单
+            operationId: User_ListTransactions
+            parameters:
+                - name: page
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.ListTransactionsResponse'
+components:
+    schemas:
+        order.v1.CabinetInfo:
+            type: object
+            properties:
+                id:
+                    type: string
+                cabinetNo:
+                    type: string
+                status:
+                    type: integer
+                    format: int32
+                totalSlots:
+                    type: integer
+                    format: int32
+                availableSlots:
+                    type: integer
+                    format: int32
+                occupiedSlots:
+                    type: integer
+                    format: int32
+                slots:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/order.v1.SlotInfo'
+        order.v1.CancelOrderRequest:
+            type: object
+            properties:
+                orderNo:
+                    type: string
+        order.v1.CancelOrderResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        order.v1.CreateCompensationPaymentRequest:
+            type: object
+            properties:
+                orderNo:
+                    type: string
+        order.v1.CreateCompensationPaymentResponse:
+            type: object
+            properties:
+                paymentUrl:
+                    type: string
+                amount:
+                    type: string
+                channel:
+                    type: string
+        order.v1.CreateOrderRequest:
+            type: object
+            properties:
+                powerBankId:
+                    type: string
+                stationId:
+                    type: string
+                cabinetId:
+                    type: string
+                slotId:
+                    type: string
+        order.v1.CreateOrderResponse:
+            type: object
+            properties:
+                orderNo:
+                    type: string
+                startFee:
+                    type: string
+                hourlyFee:
+                    type: string
+                dailyCap:
+                    type: string
+                depositFrozen:
+                    type: string
+                borrowTime:
+                    type: string
+        order.v1.ExtendRentalRequest:
+            type: object
+            properties:
+                orderNo:
+                    type: string
+                extraMinutes:
+                    type: integer
+                    format: int32
+        order.v1.ExtendRentalResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+                additionalDeposit:
+                    type: string
+        order.v1.GetCabinetListResponse:
+            type: object
+            properties:
+                cabinets:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/order.v1.CabinetInfo'
+        order.v1.GetCurrentOrderResponse:
+            type: object
+            properties:
+                order:
+                    $ref: '#/components/schemas/order.v1.OrderInfo'
+        order.v1.GetDelayFeeRequest:
+            type: object
+            properties:
+                orderNo:
+                    type: string
+                extraMinutes:
+                    type: integer
+                    format: int32
+        order.v1.GetDelayFeeResponse:
+            type: object
+            properties:
+                orderNo:
+                    type: string
+                extraMinutes:
+                    type: integer
+                    format: int32
+                additionalFee:
+                    type: string
+                estimatedTotal:
+                    type: string
+                additionalDeposit:
+                    type: string
+                hourlyFee:
+                    type: string
+                dailyCap:
+                    type: string
+        order.v1.GetOrderDetailResponse:
+            type: object
+            properties:
+                order:
+                    $ref: '#/components/schemas/order.v1.OrderDetail'
+        order.v1.GetRealTimeFeeResponse:
+            type: object
+            properties:
+                orderNo:
+                    type: string
+                elapsedSeconds:
+                    type: string
+                currentFee:
+                    type: string
+                dailyCap:
+                    type: string
+                hourlyFee:
+                    type: string
+        order.v1.GetStationResponse:
+            type: object
+            properties:
+                station:
+                    $ref: '#/components/schemas/order.v1.StationInfo'
+        order.v1.ListNearbyStationsRequest:
+            type: object
+            properties:
+                latitude:
+                    type: number
+                    format: double
+                longitude:
+                    type: number
+                    format: double
+                radiusMeters:
+                    type: integer
+                    format: int32
+        order.v1.ListNearbyStationsResponse:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/order.v1.StationInfo'
+        order.v1.ListOrdersRequest:
+            type: object
+            properties:
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+                status:
+                    type: string
+        order.v1.ListOrdersResponse:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/order.v1.OrderInfo'
+                total:
+                    type: integer
+                    format: int32
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+        order.v1.OrderDetail:
+            type: object
+            properties:
+                id:
+                    type: string
+                orderNo:
+                    type: string
+                userId:
+                    type: string
+                powerBankId:
+                    type: string
+                powerBankNo:
+                    type: string
+                borrowStationId:
+                    type: string
+                borrowStationName:
+                    type: string
+                borrowCabinetId:
+                    type: string
+                borrowCabinetNo:
+                    type: string
+                borrowSlotId:
+                    type: string
+                borrowSlotNo:
+                    type: string
+                returnStationId:
+                    type: string
+                returnStationName:
+                    type: string
+                returnCabinetId:
+                    type: string
+                returnCabinetNo:
+                    type: string
+                returnSlotId:
+                    type: string
+                returnSlotNo:
+                    type: string
+                borrowTime:
+                    type: string
+                returnTime:
+                    type: string
+                durationMinutes:
+                    type: integer
+                    format: int32
+                startFee:
+                    type: string
+                hourlyFee:
+                    type: string
+                dailyCap:
+                    type: string
+                totalAmount:
+                    type: string
+                paidAmount:
+                    type: string
+                discountAmount:
+                    type: string
+                deposit:
+                    type: string
+                status:
+                    type: string
+                remark:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+        order.v1.OrderInfo:
+            type: object
+            properties:
+                id:
+                    type: string
+                orderNo:
+                    type: string
+                userId:
+                    type: string
+                powerBankId:
+                    type: string
+                powerBankNo:
+                    type: string
+                borrowStationId:
+                    type: string
+                borrowStationName:
+                    type: string
+                returnStationId:
+                    type: string
+                returnStationName:
+                    type: string
+                borrowTime:
+                    type: string
+                returnTime:
+                    type: string
+                durationMinutes:
+                    type: integer
+                    format: int32
+                startFee:
+                    type: string
+                hourlyFee:
+                    type: string
+                totalAmount:
+                    type: string
+                paidAmount:
+                    type: string
+                status:
+                    type: string
+                remark:
+                    type: string
+                discountAmount:
+                    type: string
+                dailyCap:
+                    type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+        order.v1.PreCheckBorrowRequest:
+            type: object
+            properties:
+                powerBankId:
+                    type: string
+                stationId:
+                    type: string
+                cabinetId:
+                    type: string
+                slotId:
+                    type: string
+        order.v1.PreCheckBorrowResponse:
+            type: object
+            properties:
+                allowed:
+                    type: boolean
+                reason:
+                    type: string
+                depositRequired:
+                    type: string
+                startFee:
+                    type: string
+                hourlyFee:
+                    type: string
+                dailyCap:
+                    type: string
+        order.v1.ReturnPowerBankRequest:
+            type: object
+            properties:
+                orderNo:
+                    type: string
+                stationId:
+                    type: string
+                cabinetId:
+                    type: string
+                slotId:
+                    type: string
+                couponId:
+                    type: string
+        order.v1.ReturnPowerBankResponse:
+            type: object
+            properties:
+                orderNo:
+                    type: string
+                durationMinutes:
+                    type: string
+                totalAmount:
+                    type: string
+                paidAmount:
+                    type: string
+                discountAmount:
+                    type: string
+                balanceDeducted:
+                    type: string
+                depositDeducted:
+                    type: string
+                returnTime:
+                    type: string
+        order.v1.SlotInfo:
+            type: object
+            properties:
+                id:
+                    type: string
+                slotNo:
+                    type: string
+                status:
+                    type: string
+                powerBankId:
+                    type: string
+                powerBankNo:
+                    type: string
+                batteryLevel:
+                    type: integer
+                    format: int32
+                power:
+                    type: string
+        order.v1.StationInfo:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                address:
+                    type: string
+                latitude:
+                    type: number
+                    format: double
+                longitude:
+                    type: number
+                    format: double
+        payment.v1.CreatePaymentRequest:
+            type: object
+            properties:
+                bizType:
+                    type: string
+                bizNo:
+                    type: string
+                channel:
+                    type: string
+                amount:
+                    type: string
+                description:
+                    type: string
+        payment.v1.CreatePaymentResponse:
+            type: object
+            properties:
+                paymentNo:
+                    type: string
+                payParams:
+                    type: object
+                    additionalProperties:
+                        type: string
+                payUrl:
+                    type: string
+        payment.v1.MarkNotificationReadRequest:
+            type: object
+            properties:
+                ids:
+                    type: array
+                    items:
+                        type: string
+        payment.v1.MarkNotificationReadResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        payment.v1.PaymentCallbackRequest:
+            type: object
+            properties:
+                channel:
+                    type: string
+                params:
+                    type: object
+                    additionalProperties:
+                        type: string
+        payment.v1.PaymentCallbackResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        user.v1.BindPhoneRequest:
+            type: object
+            properties:
+                phone:
+                    type: string
+                code:
+                    type: string
+        user.v1.BindPhoneResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        user.v1.GetDepositInfoResponse:
+            type: object
+            properties:
+                hasDeposit:
+                    type: boolean
+                depositAmount:
+                    type: string
+                depositFrozen:
+                    type: string
+                walletBalance:
+                    type: string
+                depositEnough:
+                    type: boolean
+                rules:
+                    type: string
+        user.v1.GetProfileResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/user.v1.UserInfo'
+        user.v1.GetWalletResponse:
+            type: object
+            properties:
+                wallet:
+                    $ref: '#/components/schemas/user.v1.WalletInfo'
+        user.v1.ListTransactionsResponse:
+            type: object
+            properties:
+                list:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/user.v1.TransactionInfo'
+                total:
+                    type: integer
+                    format: int32
+                page:
+                    type: integer
+                    format: int32
+                pageSize:
+                    type: integer
+                    format: int32
+        user.v1.LoginPhoneRequest:
+            type: object
+            properties:
+                phone:
+                    type: string
+                code:
+                    type: string
+                nickname:
+                    type: string
+                avatar:
+                    type: string
+        user.v1.LoginRequest:
+            type: object
+            properties:
+                code:
+                    type: string
+                nickname:
+                    type: string
+                avatar:
+                    type: string
+        user.v1.LoginResponse:
+            type: object
+            properties:
+                token:
+                    type: string
+                user:
+                    $ref: '#/components/schemas/user.v1.UserInfo'
+        user.v1.LogoutRequest:
+            type: object
+            properties: {}
+        user.v1.LogoutResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        user.v1.PayDepositRequest:
+            type: object
+            properties:
+                amount:
+                    type: string
+        user.v1.PayDepositResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        user.v1.RechargeDepositRequest:
+            type: object
+            properties:
+                amount:
+                    type: string
+        user.v1.RechargeDepositResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        user.v1.RefundDepositRequest:
+            type: object
+            properties: {}
+        user.v1.RefundDepositResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        user.v1.SendSmsCodeRequest:
+            type: object
+            properties:
+                phone:
+                    type: string
+        user.v1.SendSmsCodeResponse:
+            type: object
+            properties:
+                message:
+                    type: string
+        user.v1.TransactionInfo:
+            type: object
+            properties:
+                id:
+                    type: string
+                userId:
+                    type: string
+                walletId:
+                    type: string
+                orderId:
+                    type: string
+                tradeType:
+                    type: string
+                amount:
+                    type: string
+                balanceBefore:
+                    type: string
+                balanceAfter:
+                    type: string
+                remark:
+                    type: string
+                createdAt:
+                    type: string
+        user.v1.UpdateProfileRequest:
+            type: object
+            properties:
+                nickname:
+                    type: string
+                avatar:
+                    type: string
+                gender:
+                    type: integer
+                    format: int32
+        user.v1.UpdateProfileResponse:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/user.v1.UserInfo'
+        user.v1.UserInfo:
+            type: object
+            properties:
+                id:
+                    type: string
+                openId:
+                    type: string
+                unionId:
+                    type: string
+                nickname:
+                    type: string
+                avatar:
+                    type: string
+                phone:
+                    type: string
+                gender:
+                    type: integer
+                    format: int32
+                status:
+                    type: integer
+                    format: int32
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+        user.v1.WalletInfo:
+            type: object
+            properties:
+                id:
+                    type: string
+                userId:
+                    type: string
+                balance:
+                    type: string
+                frozen:
+                    type: string
+                totalRecharge:
+                    type: string
+                totalConsume:
+                    type: string
+                status:
+                    type: integer
+                    format: int32
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+tags:
+    - name: Order
+      description: 订单服务（充电宝租借全流程管理）
+    - name: Payment
+      description: 支付服务（含通知消息管理）
+    - name: User
+      description: 用户服务（含登录注册、个人信息、钱包押金管理）

@@ -1,0 +1,501 @@
+package data
+
+import (
+	"context"
+	"errors"
+	"math"
+	"monster/internal/biz"
+	"time"
+
+	"github.com/go-kratos/kratos/v2/log"
+	"gorm.io/gorm"
+)
+
+// ---------- Order Model ----------
+
+type order struct {
+	ID              int64          `gorm:"primaryKey;autoIncrement"`
+	OrderNo         string         `gorm:"column:order_no;uniqueIndex;size:64"`
+	UserID          int64          `gorm:"index"`
+	PowerBankID     int64          `gorm:"column:power_bank_id"`
+	PowerBankNo     string         `gorm:"column:power_bank_no;size:64"`
+	BorrowStationID int64          `gorm:"column:borrow_station_id"`
+	BorrowCabinetID int64          `gorm:"column:borrow_cabinet_id"`
+	BorrowSlotID    int64          `gorm:"column:borrow_slot_id"`
+	ReturnStationID int64          `gorm:"column:return_station_id;default:0"`
+	ReturnCabinetID int64          `gorm:"column:return_cabinet_id;default:0"`
+	ReturnSlotID    int64          `gorm:"column:return_slot_id;default:0"`
+	BorrowTime      time.Time      `gorm:"column:borrow_time"`
+	ReturnTime      *time.Time     `gorm:"column:return_time"`
+	DurationMinutes int32          `gorm:"column:duration_minutes;default:0"`
+	StartFee        int64          `gorm:"column:start_fee;default:0"`
+	HourlyFee       int64          `gorm:"column:hourly_fee;default:0"`
+	DailyCap        int64          `gorm:"column:daily_cap;default:0"`
+	Deposit         int64          `gorm:"default:0"`
+	TotalAmount     int64          `gorm:"column:total_amount;default:0"`
+	PaidAmount      int64          `gorm:"column:paid_amount;default:0"`
+	DiscountAmount  int64          `gorm:"column:discount_amount;default:0"`
+	Status          string         `gorm:"size:32;index;default:pending"`
+	Remark          string         `gorm:"size:255"`
+	CreatedAt       time.Time      `gorm:"autoCreateTime"`
+	UpdatedAt       time.Time      `gorm:"autoUpdateTime"`
+	DeletedAt       gorm.DeletedAt `gorm:"index"`
+}
+
+func (order) TableName() string { return "orders" }
+
+type orderItem struct {
+	ID          int64     `gorm:"primaryKey;autoIncrement"`
+	OrderID     int64     `gorm:"index"`
+	OrderNo     string    `gorm:"index;size:64"`
+	FeeType     string    `gorm:"column:fee_type;size:32"`
+	Amount      int64     `gorm:"default:0"`
+	Description string    `gorm:"size:255"`
+	CreatedAt   time.Time `gorm:"autoCreateTime"`
+}
+
+func (orderItem) TableName() string { return "order_items" }
+
+// ---------- PowerBank Model ----------
+
+type powerBank struct {
+	ID           int64  `gorm:"primaryKey;autoIncrement"`
+	DeviceNo     string `gorm:"column:device_no;uniqueIndex;size:64"`
+	StationID    int64  `gorm:"column:station_id;index"`
+	CabinetID    int64  `gorm:"column:cabinet_id"`
+	SlotID       int64  `gorm:"column:slot_id"`
+	Status       string `gorm:"size:32;default:available"` // available, borrowed, offline, fault
+	BatteryLevel int32  `gorm:"column:battery_level;default:100"`
+}
+
+func (powerBank) TableName() string { return "power_banks" }
+
+// ---------- Station Model ----------
+
+type station struct {
+	ID        int64  `gorm:"primaryKey;autoIncrement"`
+	Name      string `gorm:"size:128"`
+	Address   string `gorm:"size:255"`
+	Latitude  float64 `gorm:"column:latitude;default:0"`
+	Longitude float64 `gorm:"column:longitude;default:0"`
+	Status    int32  `gorm:"default:1"` // 1-normal, 2-maintenance
+}
+
+func (station) TableName() string { return "stations" }
+
+// ---------- Cabinet Model ----------
+
+type cabinet struct {
+	ID        int64  `gorm:"primaryKey;autoIncrement"`
+	StationID int64  `gorm:"column:station_id;index"`
+	CabinetNo string `gorm:"column:cabinet_no;size:32"`
+	Status    int32  `gorm:"default:1"` // 1-normal, 2-offline, 3-fault
+}
+
+func (cabinet) TableName() string { return "cabinets" }
+
+// ---------- Slot Model ----------
+
+type slot struct {
+	ID          int64  `gorm:"primaryKey;autoIncrement"`
+	CabinetID   int64  `gorm:"column:cabinet_id;index"`
+	StationID   int64  `gorm:"column:station_id;index"`
+	SlotNo      string `gorm:"column:slot_no;size:32"`
+	Status      string `gorm:"size:32;default:empty"` // empty, occupied, disabled
+	PowerBankID int64  `gorm:"column:power_bank_id;default:0"`
+}
+
+func (slot) TableName() string { return "slots" }
+
+// ---------- Coupon Model ----------
+
+type coupon struct {
+	ID        int64      `gorm:"primaryKey;autoIncrement"`
+	UserID    int64      `gorm:"column:user_id;index"`
+	Type      string     `gorm:"size:32"`          // full_reduce, percent, fixed
+	Amount    int64      `gorm:"default:0"`         // 优惠金额(分) or discount percent
+	MinAmount int64      `gorm:"column:min_amount;default:0"`
+	Status    string     `gorm:"size:32;default:unused"` // unused, used, expired
+	ExpireAt  time.Time  `gorm:"column:expire_at"`
+	UsedAt    *time.Time `gorm:"column:used_at"`
+}
+
+func (coupon) TableName() string { return "coupons" }
+
+// ---------- OrderRepo ----------
+
+type orderRepo struct {
+	data *Data
+	log  *log.Helper
+}
+
+func NewOrderRepo(data *Data, logger log.Logger) biz.OrderRepo {
+	return &orderRepo{data: data, log: log.NewHelper(logger)}
+}
+
+// ----- Basic CRUD -----
+
+func (r *orderRepo) Create(ctx context.Context, o *biz.Order) (*biz.Order, error) {
+	m := r.toModel(o)
+	if err := r.data.db.WithContext(ctx).Create(m).Error; err != nil {
+		return nil, err
+	}
+	return r.toBiz(m), nil
+}
+
+func (r *orderRepo) GetByID(ctx context.Context, id int64) (*biz.Order, error) {
+	var m order
+	if err := r.data.db.WithContext(ctx).First(&m, id).Error; err != nil {
+		return nil, err
+	}
+	return r.toBiz(&m), nil
+}
+
+func (r *orderRepo) GetByOrderNo(ctx context.Context, orderNo string) (*biz.Order, error) {
+	var m order
+	if err := r.data.db.WithContext(ctx).Where("order_no = ?", orderNo).First(&m).Error; err != nil {
+		return nil, err
+	}
+	return r.toBiz(&m), nil
+}
+
+func (r *orderRepo) ListByUserID(ctx context.Context, userID int64, page, pageSize int, status string) ([]*biz.Order, int, error) {
+	query := r.data.db.WithContext(ctx).Model(&order{}).Where("user_id = ?", userID)
+	if status != "" {
+		query = query.Where("status = ?", status)
+	}
+	var total int64
+	query.Count(&total)
+	var list []order
+	offset := (page - 1) * pageSize
+	if err := query.Order("id DESC").Offset(offset).Limit(pageSize).Find(&list).Error; err != nil {
+		return nil, 0, err
+	}
+	result := make([]*biz.Order, 0, len(list))
+	for _, m := range list {
+		result = append(result, r.toBiz(&m))
+	}
+	return result, int(total), nil
+}
+
+func (r *orderRepo) Update(ctx context.Context, o *biz.Order) error {
+	return r.data.db.WithContext(ctx).Save(r.toModel(o)).Error
+}
+
+func (r *orderRepo) UpdateStatus(ctx context.Context, id int64, status string) error {
+	return r.data.db.WithContext(ctx).Model(&order{}).Where("id = ?", id).Update("status", status).Error
+}
+
+func (r *orderRepo) CreateItem(ctx context.Context, item *biz.OrderItem) error {
+	return r.data.db.WithContext(ctx).Create(&orderItem{
+		OrderID:     item.OrderID,
+		OrderNo:     item.OrderNo,
+		FeeType:     item.FeeType,
+		Amount:      item.Amount,
+		Description: item.Description,
+	}).Error
+}
+
+// ----- Extended Operations -----
+
+func (r *orderRepo) GetCurrentByUserID(ctx context.Context, userID int64) (*biz.Order, error) {
+	var m order
+	if err := r.data.db.WithContext(ctx).
+		Where("user_id = ? AND status IN ('pending','borrowed')", userID).
+		Order("id DESC").First(&m).Error; err != nil {
+		return nil, err
+	}
+	return r.toBiz(&m), nil
+}
+
+func (r *orderRepo) UpdateOrderPartial(ctx context.Context, id int64, updates map[string]interface{}) error {
+	return r.data.db.WithContext(ctx).Model(&order{}).Where("id = ?", id).Updates(updates).Error
+}
+
+func (r *orderRepo) GetOrderByNoForUpdate(ctx context.Context, orderNo string) (*biz.Order, error) {
+	var m order
+	tx := r.data.db.WithContext(ctx).Set("gorm:query_option", "FOR UPDATE")
+	if err := tx.Where("order_no = ?", orderNo).First(&m).Error; err != nil {
+		return nil, err
+	}
+	return r.toBiz(&m), nil
+}
+
+// ----- PowerBank -----
+
+func (r *orderRepo) GetPowerBank(ctx context.Context, id int64) (*biz.PowerBank, error) {
+	var m powerBank
+	if err := r.data.db.WithContext(ctx).First(&m, id).Error; err != nil {
+		return nil, err
+	}
+	return r.toPowerBankBiz(&m), nil
+}
+
+func (r *orderRepo) UpdatePowerBankStatus(ctx context.Context, id int64, status string) error {
+	return r.data.db.WithContext(ctx).Model(&powerBank{}).Where("id = ?", id).Update("status", status).Error
+}
+
+// ----- Station -----
+
+func (r *orderRepo) GetStation(ctx context.Context, id int64) (*biz.Station, error) {
+	var m station
+	if err := r.data.db.WithContext(ctx).First(&m, id).Error; err != nil {
+		return nil, err
+	}
+	return &biz.Station{ID: m.ID, Name: m.Name, Address: m.Address, Latitude: m.Latitude, Longitude: m.Longitude}, nil
+}
+
+func (r *orderRepo) ListNearbyStations(ctx context.Context, lat, lng float64, radiusMeters int) ([]*biz.Station, error) {
+	// Approximate bounding box: 1deg lat ≈ 111320m, 1deg lng ≈ 111320*cos(lat)
+	latDelta := float64(radiusMeters) / 111320.0
+	lngDelta := float64(radiusMeters) / (111320.0 * cosDeg(lat))
+
+	minLat := lat - latDelta
+	maxLat := lat + latDelta
+	minLng := lng - lngDelta
+	maxLng := lng + lngDelta
+
+	var list []station
+	if err := r.data.db.WithContext(ctx).
+		Where("latitude BETWEEN ? AND ? AND longitude BETWEEN ? AND ? AND status = 1", minLat, maxLat, minLng, maxLng).
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]*biz.Station, 0, len(list))
+	for _, m := range list {
+		result = append(result, &biz.Station{ID: m.ID, Name: m.Name, Address: m.Address, Latitude: m.Latitude, Longitude: m.Longitude})
+	}
+	return result, nil
+}
+
+func cosDeg(deg float64) float64 {
+	return math.Cos(deg * math.Pi / 180)
+}
+
+// ----- Slot -----
+
+func (r *orderRepo) GetSlot(ctx context.Context, id int64) (*biz.Slot, error) {
+	var m slot
+	if err := r.data.db.WithContext(ctx).First(&m, id).Error; err != nil {
+		return nil, err
+	}
+	return r.toSlotBiz(&m), nil
+}
+
+func (r *orderRepo) GetSlotByStationCabinet(ctx context.Context, stationID, cabinetID, slotID int64) (*biz.Slot, error) {
+	var m slot
+	if err := r.data.db.WithContext(ctx).
+		Where("station_id = ? AND cabinet_id = ? AND id = ?", stationID, cabinetID, slotID).
+		First(&m).Error; err != nil {
+		return nil, err
+	}
+	return r.toSlotBiz(&m), nil
+}
+
+func (r *orderRepo) OccupySlot(ctx context.Context, slotID, powerBankID int64) error {
+	result := r.data.db.WithContext(ctx).Model(&slot{}).
+		Where("id = ? AND status = 'empty'", slotID).
+		Updates(map[string]interface{}{"status": "occupied", "power_bank_id": powerBankID})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("slot is not empty")
+	}
+	return nil
+}
+
+func (r *orderRepo) ReleaseSlot(ctx context.Context, slotID int64) error {
+	return r.data.db.WithContext(ctx).Model(&slot{}).Where("id = ?", slotID).
+		Updates(map[string]interface{}{"status": "empty", "power_bank_id": 0}).Error
+}
+
+// ----- Coupon -----
+
+func (r *orderRepo) GetUserCoupons(ctx context.Context, userID int64) ([]*biz.Coupon, error) {
+	var list []coupon
+	if err := r.data.db.WithContext(ctx).
+		Where("user_id = ? AND status = 'unused' AND expire_at > NOW()", userID).
+		Find(&list).Error; err != nil {
+		return nil, err
+	}
+	result := make([]*biz.Coupon, 0, len(list))
+	for _, m := range list {
+		result = append(result, r.toCouponBiz(&m))
+	}
+	return result, nil
+}
+
+func (r *orderRepo) GetCoupon(ctx context.Context, id int64) (*biz.Coupon, error) {
+	var m coupon
+	if err := r.data.db.WithContext(ctx).First(&m, id).Error; err != nil {
+		return nil, err
+	}
+	return r.toCouponBiz(&m), nil
+}
+
+func (r *orderRepo) UseCoupon(ctx context.Context, id int64, userID int64) error {
+	now := time.Now()
+	result := r.data.db.WithContext(ctx).Model(&coupon{}).
+		Where("id = ? AND user_id = ? AND status = 'unused'", id, userID).
+		Updates(map[string]interface{}{"status": "used", "used_at": &now})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return errors.New("coupon not available")
+	}
+	return nil
+}
+
+// ----- Converters -----
+
+func (r *orderRepo) toBiz(m *order) *biz.Order {
+	return &biz.Order{
+		ID:              m.ID,
+		OrderNo:         m.OrderNo,
+		UserID:          m.UserID,
+		PowerBankID:     m.PowerBankID,
+		PowerBankNo:     m.PowerBankNo,
+		BorrowStationID: m.BorrowStationID,
+		BorrowCabinetID: m.BorrowCabinetID,
+		BorrowSlotID:    m.BorrowSlotID,
+		ReturnStationID: m.ReturnStationID,
+		ReturnCabinetID: m.ReturnCabinetID,
+		ReturnSlotID:    m.ReturnSlotID,
+		BorrowTime:      m.BorrowTime,
+		ReturnTime:      m.ReturnTime,
+		DurationMinutes: m.DurationMinutes,
+		StartFee:        m.StartFee,
+		HourlyFee:       m.HourlyFee,
+		DailyCap:        m.DailyCap,
+		Deposit:         m.Deposit,
+		TotalAmount:     m.TotalAmount,
+		PaidAmount:      m.PaidAmount,
+		DiscountAmount:  m.DiscountAmount,
+		Status:          m.Status,
+		Remark:          m.Remark,
+		CreatedAt:       m.CreatedAt,
+		UpdatedAt:       m.UpdatedAt,
+	}
+}
+
+func (r *orderRepo) toModel(o *biz.Order) *order {
+	return &order{
+		ID:              o.ID,
+		OrderNo:         o.OrderNo,
+		UserID:          o.UserID,
+		PowerBankID:     o.PowerBankID,
+		PowerBankNo:     o.PowerBankNo,
+		BorrowStationID: o.BorrowStationID,
+		BorrowCabinetID: o.BorrowCabinetID,
+		BorrowSlotID:    o.BorrowSlotID,
+		ReturnStationID: o.ReturnStationID,
+		ReturnCabinetID: o.ReturnCabinetID,
+		ReturnSlotID:    o.ReturnSlotID,
+		BorrowTime:      o.BorrowTime,
+		ReturnTime:      o.ReturnTime,
+		DurationMinutes: o.DurationMinutes,
+		StartFee:        o.StartFee,
+		HourlyFee:       o.HourlyFee,
+		DailyCap:        o.DailyCap,
+		Deposit:         o.Deposit,
+		TotalAmount:     o.TotalAmount,
+		PaidAmount:      o.PaidAmount,
+		DiscountAmount:  o.DiscountAmount,
+		Status:          o.Status,
+		Remark:          o.Remark,
+	}
+}
+
+func (r *orderRepo) toPowerBankBiz(m *powerBank) *biz.PowerBank {
+	return &biz.PowerBank{
+		ID:           m.ID,
+		DeviceNo:     m.DeviceNo,
+		StationID:    m.StationID,
+		CabinetID:    m.CabinetID,
+		SlotID:       m.SlotID,
+		Status:       m.Status,
+		BatteryLevel: m.BatteryLevel,
+	}
+}
+
+func (r *orderRepo) toSlotBiz(m *slot) *biz.Slot {
+	return &biz.Slot{
+		ID:          m.ID,
+		CabinetID:   m.CabinetID,
+		StationID:   m.StationID,
+		SlotNo:      m.SlotNo,
+		Status:      m.Status,
+		PowerBankID: m.PowerBankID,
+	}
+}
+
+// ----- Cabinet & Slot Details -----
+
+func (r *orderRepo) ListCabinetsByStationID(ctx context.Context, stationID int64) ([]*biz.CabinetDetail, error) {
+	var cabinets []cabinet
+	if err := r.data.db.WithContext(ctx).Where("station_id = ?", stationID).Find(&cabinets).Error; err != nil {
+		return nil, err
+	}
+
+	result := make([]*biz.CabinetDetail, 0, len(cabinets))
+	for _, c := range cabinets {
+		var slots []slot
+		r.data.db.WithContext(ctx).Where("cabinet_id = ?", c.ID).Find(&slots)
+
+		occupiedCount := 0
+		slotDetails := make([]*biz.SlotDetail, 0, len(slots))
+		for _, s := range slots {
+			sd := &biz.SlotDetail{
+				ID:     s.ID,
+				SlotNo: s.SlotNo,
+				Status: s.Status,
+			}
+			if s.Status == "occupied" && s.PowerBankID > 0 {
+				occupiedCount++
+				var pb powerBank
+				if err := r.data.db.WithContext(ctx).First(&pb, s.PowerBankID).Error; err == nil {
+					sd.PowerBankID = pb.ID
+					sd.PowerBankNo = pb.DeviceNo
+					sd.BatteryLevel = pb.BatteryLevel
+					sd.Power = "22.5W" // default, could be a field on powerBank
+				}
+			}
+			slotDetails = append(slotDetails, sd)
+		}
+
+		result = append(result, &biz.CabinetDetail{
+			ID:             c.ID,
+			CabinetNo:      c.CabinetNo,
+			Status:         c.Status,
+			TotalSlots:     int32(len(slots)),
+			OccupiedSlots:  int32(occupiedCount),
+			AvailableSlots: int32(len(slots) - occupiedCount),
+			Slots:          slotDetails,
+		})
+	}
+
+	return result, nil
+}
+
+func (r *orderRepo) GetOrderDetail(ctx context.Context, orderNo string) (*biz.Order, error) {
+	var m order
+	if err := r.data.db.WithContext(ctx).Where("order_no = ?", orderNo).First(&m).Error; err != nil {
+		return nil, err
+	}
+	return r.toBiz(&m), nil
+}
+
+func (r *orderRepo) toCouponBiz(m *coupon) *biz.Coupon {
+	return &biz.Coupon{
+		ID:        m.ID,
+		UserID:    m.UserID,
+		Type:      m.Type,
+		Amount:    m.Amount,
+		MinAmount: m.MinAmount,
+		Status:    m.Status,
+		ExpireAt:  m.ExpireAt,
+	}
+}

@@ -1,0 +1,376 @@
+syntax = "proto3";
+
+package order.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "monster/api/order/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.order.v1";
+
+// 订单服务（充电宝租借全流程管理）
+service Order {
+  // 租借前预检
+  rpc PreCheckBorrow(PreCheckBorrowRequest) returns (PreCheckBorrowResponse) {
+    option (google.api.http) = { post: "/api/v1/order/pre-check" body: "*" };
+  }
+  // 创建租借订单
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse) {
+    option (google.api.http) = { post: "/api/v1/order/create" body: "*" };
+  }
+  // 取消订单
+  rpc CancelOrder(CancelOrderRequest) returns (CancelOrderResponse) {
+    option (google.api.http) = { post: "/api/v1/order/cancel" body: "*" };
+  }
+  // 归还充电宝
+  rpc ReturnPowerBank(ReturnPowerBankRequest) returns (ReturnPowerBankResponse) {
+    option (google.api.http) = { post: "/api/v1/order/return" body: "*" };
+  }
+  // 延长租借
+  rpc ExtendRental(ExtendRentalRequest) returns (ExtendRentalResponse) {
+    option (google.api.http) = { post: "/api/v1/order/extend" body: "*" };
+  }
+  // 查询当前订单
+  rpc GetCurrentOrder(GetCurrentOrderRequest) returns (GetCurrentOrderResponse) {
+    option (google.api.http) = { get: "/api/v1/order/current" };
+  }
+  // 实时费用查询
+  rpc GetRealTimeFee(GetRealTimeFeeRequest) returns (GetRealTimeFeeResponse) {
+    option (google.api.http) = { get: "/api/v1/order/fee" };
+  }
+  // 历史订单查询
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse) {
+    option (google.api.http) = { get: "/api/v1/order/list" };
+  }
+  // 待赔付支付入口
+  rpc CreateCompensationPayment(CreateCompensationPaymentRequest) returns (CreateCompensationPaymentResponse) {
+    option (google.api.http) = { post: "/api/v1/order/compensation" body: "*" };
+  }
+  // 获取站点详情
+  rpc GetStation(GetStationRequest) returns (GetStationResponse) {
+    option (google.api.http) = { get: "/api/v1/station/{id}" };
+  }
+  // 查询附近站点（含距离和空闲充电宝数）
+  rpc ListNearbyStations(ListNearbyStationsRequest) returns (ListNearbyStationsResponse) {
+    option (google.api.http) = { get: "/api/v1/station/nearby" };
+  }
+  // 查询站点下所有机柜及仓位详情
+  rpc GetCabinetList(GetCabinetListRequest) returns (GetCabinetListResponse) {
+    option (google.api.http) = { get: "/api/v1/station/cabinet-list" };
+  }
+  // 查询订单详情（含借还机柜仓位信息）
+  rpc GetOrderDetail(GetOrderDetailRequest) returns (GetOrderDetailResponse) {
+    option (google.api.http) = { get: "/api/v1/order/detail" };
+  }
+  // 延长租借费用预览
+  rpc GetDelayFee(GetDelayFeeRequest) returns (GetDelayFeeResponse) {
+    option (google.api.http) = { post: "/api/v1/order/delay-fee" body: "*" };
+  }
+  // 扫码解析机柜（扫描二维码进入机柜详情）
+  rpc ScanCabinet(ScanCabinetRequest) returns (ScanCabinetResponse) {
+    option (google.api.http) = { post: "/api/v1/cabinet/scan" body: "*" };
+  }
+}
+
+// ---------- 租借前预检 ----------
+
+message PreCheckBorrowRequest {
+  int64 power_bank_id = 1;  // 充电宝ID
+  int64 station_id = 2;     // 站点ID
+  int64 cabinet_id = 3;     // 机柜ID
+  int64 slot_id = 4;        // 仓位ID
+}
+
+message PreCheckBorrowResponse {
+  bool allowed = 1;          // 是否允许租借
+  string reason = 2;         // 不允许的原因，allowed=true时为空
+  int64 deposit_required = 3;// 所需押金（分），0表示不需要
+  int64 start_fee = 4;       // 起步价（分）
+  int64 hourly_fee = 5;      // 每小时费用（分）
+  int64 daily_cap = 6;       // 每日封顶（分）
+}
+
+// ---------- 创建租借订单 ----------
+
+message CreateOrderRequest {
+  int64 power_bank_id = 1;  // 充电宝ID
+  int64 station_id = 2;     // 站点ID
+  int64 cabinet_id = 3;     // 机柜ID
+  int64 slot_id = 4;        // 仓位ID
+}
+
+message CreateOrderResponse {
+  string order_no = 1;       // 订单号
+  int64 start_fee = 2;       // 起步价（分）
+  int64 hourly_fee = 3;      // 每小时费用（分）
+  int64 daily_cap = 4;       // 每日封顶（分）
+  int64 deposit_frozen = 5;  // 已冻结押金（分）
+  string borrow_time = 6;    // 借出时间
+}
+
+// ---------- 取消订单 ----------
+
+message CancelOrderRequest {
+  string order_no = 1;       // 订单号
+}
+
+message CancelOrderResponse {
+  string message = 1;        // 操作结果
+}
+
+// ---------- 归还充电宝 ----------
+
+message ReturnPowerBankRequest {
+  string order_no = 1;       // 订单号
+  int64 station_id = 2;      // 归还站点ID
+  int64 cabinet_id = 3;      // 归还机柜ID
+  int64 slot_id = 4;         // 归还仓位ID
+  string coupon_id = 5;      // 优惠券ID（可选）
+}
+
+message ReturnPowerBankResponse {
+  string order_no = 1;       // 订单号
+  int64 duration_minutes = 2;// 租借时长（分钟）
+  int64 total_amount = 3;    // 总费用（分）
+  int64 paid_amount = 4;     // 实付金额（分）
+  int64 discount_amount = 5; // 优惠金额（分）
+  int64 balance_deducted = 6;// 余额扣除（分）
+  int64 deposit_deducted = 7;// 押金扣除（分）
+  string return_time = 8;    // 归还时间
+}
+
+// ---------- 延长租借 ----------
+
+message ExtendRentalRequest {
+  string order_no = 1;       // 订单号
+  int32 extra_minutes = 2;   // 延长时长（分钟）
+}
+
+message ExtendRentalResponse {
+  string message = 1;        // 操作结果
+  int64 additional_deposit = 2; // 额外冻结押金（分）
+}
+
+// ---------- 查询当前订单 ----------
+
+message GetCurrentOrderRequest {}
+
+message GetCurrentOrderResponse {
+  OrderInfo order = 1;       // 当前进行中的订单，无则返回null
+}
+
+// ---------- 实时费用查询 ----------
+
+message GetRealTimeFeeRequest {
+  string order_no = 1;       // 订单号
+}
+
+message GetRealTimeFeeResponse {
+  string order_no = 1;       // 订单号
+  int64 elapsed_seconds = 2; // 已租借秒数
+  int64 current_fee = 3;     // 当前费用（分）
+  int64 daily_cap = 4;       // 每日封顶（分）
+  int64 hourly_fee = 5;      // 每小时费用（分）
+}
+
+// ---------- 历史订单查询 ----------
+
+message ListOrdersRequest {
+  int32 page = 1;            // 页码
+  int32 page_size = 2;       // 每页数量
+  string status = 3;         // 筛选状态：borrowed-进行中 completed-已完成 pending_compensation-待赔付
+}
+
+message ListOrdersResponse {
+  repeated OrderInfo list = 1;     // 订单列表
+  int32 total = 2;                  // 总记录数
+  int32 page = 3;                   // 当前页码
+  int32 page_size = 4;              // 每页数量
+}
+
+// ---------- 待赔付支付入口 ----------
+
+message CreateCompensationPaymentRequest {
+  string order_no = 1;       // 订单号
+}
+
+message CreateCompensationPaymentResponse {
+  string payment_url = 1;    // 支付链接
+  int64 amount = 2;          // 赔付金额（分）
+  string channel = 3;        // 支付渠道
+}
+
+// ---------- 站点查询 ----------
+
+message GetStationRequest {
+  int64 id = 1;              // 站点ID
+}
+
+message GetStationResponse {
+  StationInfo station = 1;   // 站点信息
+}
+
+message ListNearbyStationsRequest {
+  double latitude = 1;       // 纬度
+  double longitude = 2;      // 经度
+  int32 radius_meters = 3;   // 搜索半径（米），默认5000，最大50000
+}
+
+message ListNearbyStationsResponse {
+  repeated StationInfo list = 1;  // 站点列表（按距离由近到远排序）
+}
+
+message StationInfo {
+  int64 id = 1;              // 站点ID
+  string name = 2;           // 站点名称
+  string address = 3;        // 详细地址
+  double latitude = 4;       // 纬度
+  double longitude = 5;      // 经度
+  double distance = 6;       // 距离（米），ListNearbyStations时返回
+  int32 available_banks = 7; // 空闲充电宝数量
+  string open_time = 8;      // 营业时间
+  string description = 9;    // 站点介绍
+  string images = 10;        // 图片JSON数组
+}
+
+// ---------- 扫码解析机柜 ----------
+
+message ScanCabinetRequest {
+  int64 cabinet_id = 1;     // 二维码中解析出的机柜ID
+}
+
+message ScanCabinetResponse {
+  // 站点信息
+  int64 station_id = 1;
+  string station_name = 2;
+  string station_address = 3;
+  // 机柜信息
+  int64 cabinet_id = 4;
+  string cabinet_no = 5;
+  int32 available_slots = 6;
+  int32 total_slots = 7;
+  // 计价规则
+  int64 start_fee = 8;       // 起步价（分）
+  int32 start_mins = 9;      // 起步时长（分钟）
+  int64 hourly_fee = 10;     // 每小时费用（分）
+  int64 daily_cap = 11;      // 每日封顶（分）
+  int64 deposit = 12;        // 押金（分）
+}
+
+// ---------- 公共消息 ----------
+
+message OrderInfo {
+  int64 id = 1;                     // ID
+  string order_no = 2;              // 订单号
+  int64 user_id = 3;                // 用户ID
+  int64 power_bank_id = 4;          // 充电宝ID
+  string power_bank_no = 5;         // 充电宝编号
+  int64 borrow_station_id = 6;      // 借出站点ID
+  string borrow_station_name = 7;   // 借出站点名称
+  int64 return_station_id = 8;      // 归还站点ID
+  string return_station_name = 9;   // 归还站点名称
+  string borrow_time = 10;          // 借出时间
+  string return_time = 11;          // 归还时间
+  int32 duration_minutes = 12;      // 租借时长（分钟）
+  int64 start_fee = 13;             // 起步价（分）
+  int64 hourly_fee = 14;            // 每小时费用（分）
+  int64 total_amount = 15;          // 总费用（分）
+  int64 paid_amount = 16;           // 实付金额（分）
+  string status = 17;               // 状态
+  string remark = 18;               // 备注
+  int64 discount_amount = 19;       // 优惠金额（分）
+  int64 daily_cap = 20;             // 每日封顶（分）
+  string created_at = 21;           // 创建时间
+  string updated_at = 22;           // 更新时间
+}
+
+// ---------- 订单详情（含机柜仓位信息） ----------
+
+message GetOrderDetailRequest {
+  string order_no = 1;              // 订单号
+}
+
+message OrderDetail {
+  int64 id = 1;
+  string order_no = 2;
+  int64 user_id = 3;
+  int64 power_bank_id = 4;
+  string power_bank_no = 5;
+  int64 borrow_station_id = 6;
+  string borrow_station_name = 7;
+  int64 borrow_cabinet_id = 8;
+  string borrow_cabinet_no = 9;
+  int64 borrow_slot_id = 10;
+  string borrow_slot_no = 11;
+  int64 return_station_id = 12;
+  string return_station_name = 13;
+  int64 return_cabinet_id = 14;
+  string return_cabinet_no = 15;
+  int64 return_slot_id = 16;
+  string return_slot_no = 17;
+  string borrow_time = 18;
+  string return_time = 19;
+  int32 duration_minutes = 20;
+  int64 start_fee = 21;
+  int64 hourly_fee = 22;
+  int64 daily_cap = 23;
+  int64 total_amount = 24;
+  int64 paid_amount = 25;
+  int64 discount_amount = 26;
+  int64 deposit = 27;
+  string status = 28;
+  string remark = 29;
+  string created_at = 30;
+  string updated_at = 31;
+}
+
+message GetOrderDetailResponse {
+  OrderDetail order = 1;
+}
+
+// ---------- 站点机柜列表 ----------
+
+message GetCabinetListRequest {
+  int64 station_id = 1;             // 站点ID
+}
+
+message CabinetInfo {
+  int64 id = 1;                     // 机柜ID
+  string cabinet_no = 2;            // 机柜编号
+  int32 status = 3;                 // 状态：1-正常 2-离线
+  int32 total_slots = 4;            // 总仓位数
+  int32 available_slots = 5;        // 空闲仓位数
+  int32 occupied_slots = 6;         // 已占用仓位数
+  repeated SlotInfo slots = 7;      // 仓位列表
+}
+
+message SlotInfo {
+  int64 id = 1;                     // 仓位ID
+  string slot_no = 2;               // 仓位编号
+  string status = 3;                // 状态：empty/occupied/disabled
+  int64 power_bank_id = 4;          // 充电宝ID（空仓位为0）
+  string power_bank_no = 5;         // 充电宝编号
+  int32 battery_level = 6;          // 电量百分比
+  string power = 7;                 // 充电功率
+}
+
+message GetCabinetListResponse {
+  repeated CabinetInfo cabinets = 1;
+}
+
+// ---------- 延长费用预览 ----------
+
+message GetDelayFeeRequest {
+  string order_no = 1;              // 订单号
+  int32 extra_minutes = 2;          // 延长时长（分钟）
+}
+
+message GetDelayFeeResponse {
+  string order_no = 1;              // 订单号
+  int32 extra_minutes = 2;          // 延长时长（分钟）
+  int64 additional_fee = 3;         // 额外费用（分）
+  int64 estimated_total = 4;        // 预估总费用（分）
+  int64 additional_deposit = 5;     // 额外需冻结押金（分）
+  int64 hourly_fee = 6;             // 每小时费用（分）
+  int64 daily_cap = 7;              // 每日封顶（分）
+}

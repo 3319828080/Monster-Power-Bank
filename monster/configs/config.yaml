@@ -1,0 +1,44 @@
+server:
+  http:
+    addr: 0.0.0.0:8000
+    timeout: 30000
+  grpc:
+    addr: 0.0.0.0:9000
+    timeout: 30000
+data:
+  database:
+    driver: mysql
+    source: root:4ay1nkal3u8ed77y@tcp(115.190.199.25:3306)/monster?parseTime=True&loc=Local
+  redis:
+    addr: 115.190.199.25:6379
+    password: 4ay1nkal3u8ed77y
+    database: 0
+    read_timeout: 200
+    write_timeout: 200
+auth:
+  SecretID: SmqeTKiSyQUJski_JdCrOZ3yl4_27KA0jynhU4HR
+  SecretKey: eI7u5yEHii8e6vCxpuIa02VBKAyYCA2F
+  jwt_secret: monster-powebank-secret-key
+  jwt_expire: 86400
+  issuer: monster
+wechat:
+  app_id: wxa768930bb53323f8
+  app_secret: 147e690243b3f6efed9cb41ce7fdd003
+  mch_id: your_mch_id
+  api_key: your_api_key
+  notify_url: https://your-domain.com/api/v1/payment/notify
+  refund_notify: https://your-domain.com/api/v1/payment/refund-notify
+business:
+  default_start_fee: 200
+  default_start_mins: 60
+  default_hourly_fee: 100
+  default_daily_cap: 2000
+  default_deposit: 9900
+Seed:
+  APIID:  C12524296
+  APIKEY:  8521c13695d21b1098ebc2802fd27af8L
+Alipay:
+  AppId: "9021000158653483"
+  Private: "MIIEowIBAAKCAQEArBLfPHR7cEwttKiBQL/zhgOWCayHAMwBvzedbiZasZyAdBEgHRHRXJvYHrHULFxQmOTdzYeR1npdDNKQ9VQDYfgAJY2wH/cPuTJQNBJXhO7GXbWotpOKksZRykjBcKfYqgMG5rA3rJ3stteGY27tpwUroWzD6q21cjcyOH8vD0p9mjutUPFiaLvkBXYD6B5rEFhvWrGu4FoUyWFVUQGUVpptu+yRlYYG1/xC3ypihtfmK/iF2bTAVpmASHX0Ra9itWx8I1S69Z0hGN5vQli7/TOAKbwp2kJWHqtHfC6AhZ6655pSVajyaR+DF275Q/14RPixbSIWhQ1Kw9TyOc5t5QIDAQABAoIBAHmiJXbgh9kLoEtRyXvxs7yJkGdqM0wW6S03rOsN5ZIjJJHnASJLVAj4iL65yVdKMhbBwR/lsus/N8M2nQ0tw+5elgv1qggOZmjs7dDBHmhzOHlJTecxSAUUdwBciZCOtRMIbLpo2hIE2C0vEGn9IbSsbPkAn0SmYdpIthFFpghR3v3+qsyU46d/OYhwXFwnz8hnZr1DmBOshsnhZv0iE+8FvaWRnlXiJ55a6re1Fu9oFtUBr7VpmVAB09GMVa3JZKRQh1WtjUmv/OiKn8RWiRQ1mpiz9kiqOvcjcS9lYKJT238g4iNH0jcJdRtZD+3WqdUtrOtzwSXZeKAjYXBsJkECgYEA6rtoQGYBCyFnXCSlxs4+gz0EN4dbzS0Z1oMXhhaVzrr0oaDdrSplPU4bXX5nSStb/xhZIFEcH1s5woPf8LFikqhLiuhoOxBJvVPeuIZJbFUYTDDZU17ZNu+rjx0aEh6kvBYuULj4MPCxBLbNylGG+8j+SHNLGJbbRVOl005rrWkCgYEAu6ob9MCWwFDUhQGpL+m94zRcJayeO33YBPHtMCFQ1P9cj/PwEYZeaqRx3yQhnPaPwDvFp7JMtThz4+axI991owbPu7ygYN2diPfO2cldaJjfaBpywMAKmFzGRQE+iiUJdVA1p/TadUiT6lGnME0yh1adG4y39x/h25BeJlvPYR0CgYAWIZNDtxpUFVMscdwbcWidcQxLu/xgzObJvdRi9RAszJ2x+3vLDts6u3mDCB7u3CKxW3dTv7H6FtzMRSjBBch4cVul/iGNqAx7yEOQfEDB8Qf4bwaegKvULSasuJ6zpKX9gc3eGIJ2Ast92Upvz939MUcgR5aF+/syfx98W8F1OQKBgG1v1AG01bSs7mHqCAnC21NF03683UGAL5siodjxdLvhds8TyCnQG/tAjo87+MYaGtZVhPw4Q/diRmLewupSg71gWX/3jecvFZEsQdpLTUeT7qQ82DKDSypy38SZ5yiUVKGu9rtNVKAUhP2eREssmYzG+7N3KkjYtNNfqyffXl4ZAoGBANdq9uRhS5phDwVpvStxwhhTOHtdTqPxJ2/+cxlal70U+CG6eAQiBNedcVnuUAJ+NUyLvA4oNWevfu/GGDRhL6wPFWkp4PxXuj34GbLDI83cjDQAIUuLLSZBVr1rZhYAmQsul/Dikzfei0kHBPBS84z9nxGnldVyzicTHvGtL6CV"
+  ReturnUrl: http://y62aaf29.natappfree.cc/callback
+  NotifyUrl: http://y62aaf29.natappfree.cc/notify

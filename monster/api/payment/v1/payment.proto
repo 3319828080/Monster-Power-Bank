@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package payment.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "monster/api/payment/v1;v1";
+option java_multiple_files = true;
+option java_package = "api.payment.v1";
+
+// 支付服务（含通知消息管理）
+service Payment {
+  // 统一拉起支付
+  rpc CreatePayment(CreatePaymentRequest) returns (CreatePaymentResponse) {
+    option (google.api.http) = { post: "/api/v1/payment/create" body: "*" };
+  }
+  // 支付异步回调
+  rpc PaymentCallback(PaymentCallbackRequest) returns (PaymentCallbackResponse) {
+    option (google.api.http) = { post: "/api/v1/payment/callback" body: "*" };
+  }
+  // 消息已读
+  rpc MarkNotificationRead(MarkNotificationReadRequest) returns (MarkNotificationReadResponse) {
+    option (google.api.http) = { post: "/api/v1/notifications/read" body: "*" };
+  }
+}
+
+// ---------- 统一拉起支付 ----------
+
+message CreatePaymentRequest {
+  string biz_type = 1;    // 业务类型：deposit-押金 rental-租金 compensation-赔付
+  string biz_no = 2;      // 关联业务单号（订单号/押金单号等）
+  string channel = 3;     // 支付渠道：wechat-微信 alipay-支付宝
+  int64 amount = 4;       // 支付金额（分）
+  string description = 5; // 支付描述
+}
+
+message CreatePaymentResponse {
+  string payment_no = 1;        // 支付单号
+  map<string, string> pay_params = 2; // 支付参数（前端拉起支付控件用）
+  string pay_url = 3;           // H5支付链接（可选）
+}
+
+// ---------- 支付异步回调 ----------
+
+message PaymentCallbackRequest {
+  string channel = 1;           // 支付渠道
+  map<string, string> params = 2; // 回调参数（渠道原始参数）
+}
+
+message PaymentCallbackResponse {
+  string message = 1;           // 处理结果
+}
+
+// ---------- 消息已读 ----------
+
+message MarkNotificationReadRequest {
+  repeated int64 ids = 1;       // 通知ID列表，支持批量
+}
+
+message MarkNotificationReadResponse {
+  string message = 1;           // 操作结果
+}
+
+// ---------- 公共消息 ----------
+
+message PaymentInfo {
+  int64 id = 1;                     // ID
+  string payment_no = 2;            // 支付单号
+  string biz_type = 3;              // 业务类型
+  string biz_no = 4;                // 业务单号
+  int64 user_id = 5;                // 用户ID
+  string channel = 6;               // 支付渠道
+  int64 amount = 7;                 // 金额（分）
+  string status = 8;                // 状态：pending-待支付 success-已支付 failed-失败
+  string created_at = 9;            // 创建时间
+  string paid_at = 10;              // 支付时间
+}
+
+message NotificationInfo {
+  int64 id = 1;                     // ID
+  int64 user_id = 2;                // 用户ID
+  string title = 3;                 // 标题
+  string content = 4;               // 内容
+  string biz_type = 5;              // 关联业务类型
+  string biz_no = 6;                // 关联业务单号
+  bool is_read = 7;                 // 是否已读
+  string created_at = 8;            // 创建时间
+}
